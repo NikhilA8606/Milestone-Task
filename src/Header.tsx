@@ -1,8 +1,8 @@
 import reactLogo from "./assets/react.svg";
 
-export default function Header(props: { title: string }) {
+export default function Header() {
   return (
-    <div className="flex  gap-2 items-center">
+    <div className="flex  gap-2 items-center bg-red-100">
       <img
         src={reactLogo}
         className="animated-spin h-13 w-13"
