@@ -1,3 +1,4 @@
+import { ActiveLink } from "raviger";
 import reactLogo from "./assets/react.svg";
 
 export default function Header() {
@@ -14,13 +15,14 @@ export default function Header() {
           { page: "Home", url: "/" },
           { page: "About", url: "/about" },
         ].map((link) => (
-          <a
+          <ActiveLink
             key={link.url}
             href={link.url}
             className="text-gray-800 p-2 m-2 uppercase"
+            exactActiveClass="text-blue-600 "
           >
             {link.page}
-          </a>
+          </ActiveLink>
         ))}
       </div>
     </div>

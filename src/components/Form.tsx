@@ -1,19 +1,15 @@
 import { useEffect, useState, useRef } from "react";
 import LabeledInput from "../LabeledInput";
+import { Link, navigate } from "raviger";
+import { formField } from "../types/form";
+import {
+  getLocalForm,
+  initialState,
+  saveFormData,
+  saveLocalForms,
+} from "../utils/StorageUtils";
 
-export interface formData {
-  id: number;
-  title: string;
-  formFields: formField[];
-}
-interface formField {
-  id: number;
-  label: string;
-  type: string;
-  value: string;
-}
-
-const intialFormField: formField[] = [
+export const intialFormField: formField[] = [
   { id: 1, label: "First Name", type: "text", value: "" },
   { id: 2, label: "Last Name", type: "text", value: "" },
   { id: 3, label: "Email", type: "email", value: "" },
@@ -21,44 +17,22 @@ const intialFormField: formField[] = [
   { id: 5, label: "Phone Number", type: "tel", value: "" },
 ];
 
-const getLocalForm: () => formData[] = () => {
-  const savedFormJSON = localStorage.getItem("savedForms");
-  return savedFormJSON ? JSON.parse(savedFormJSON) : [];
-};
-
-//Load the form data from local storage
-const initialState: (id: number) => formData = (id) => {
-  const localForms = getLocalForm();
-  const form = localForms.find((f) => f.id === id);
-  if (form) {
-    return form;
-  }
-  const newForm = {
-    id: Number(new Date()),
-    title: "Untitled Form",
-    formFields: intialFormField,
-  };
-  saveLocalForms([...localForms, newForm]);
-  return newForm;
-};
-
-const saveLocalForms = (localForm: formData[]) => {
-  localStorage.setItem("savedForms", JSON.stringify(localForm));
-};
-
-//Serialize the form data into single string and save it to local storage
-const saveFormData = (currentState: formData) => {
-  const localForms = getLocalForm();
-  const updatedLocalForms = localForms.map((form) =>
-    form.id === currentState.id ? currentState : form
-  );
-  saveLocalForms(updatedLocalForms);
-};
-
 export default function Form(props: { formId: number }) {
   const [state, setState] = useState(() => initialState(props.formId));
   const [newField, setNewField] = useState("");
   const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    state.id !== props.formId && navigate(`/forms/${state.id}`);
+  }, [state.id, props.formId]);
+
+  useEffect(() => {
+    const localForms = getLocalForm();
+    const formExists = localForms.some((f) => f.id === state.id);
+    if (!formExists) {
+      saveLocalForms([...localForms, state]);
+    }
+  }, [state]);
 
   const addField = () => {
     setState((prevState) => ({
@@ -88,14 +62,14 @@ export default function Form(props: { formId: number }) {
   }, []);
 
   useEffect(() => {
+    console.log("timeout");
     let timeout = setTimeout(() => {
       console.log("Form data changed");
-      saveFormData(state);
     }, 1000);
     return () => {
       clearTimeout(timeout);
     };
-  }, [state]);
+  }, []);
 
   const handleChange = (id: number, value: string) => {
     setState({
@@ -117,6 +91,8 @@ export default function Form(props: { formId: number }) {
             setState({ ...state, title: e.target.value });
           }}
           ref={titleRef}
+          title="Form Title"
+          placeholder="Enter form title"
         />
       </div>
       {state.formFields.map((field) => (
@@ -138,6 +114,7 @@ export default function Form(props: { formId: number }) {
           onChange={(e) => {
             setNewField(e.target.value);
           }}
+          placeholder="Enter field label"
         />
         <button
           type="button"
@@ -155,12 +132,18 @@ export default function Form(props: { formId: number }) {
         >
           Save
         </button>
-        <a
+        <Link
           href="/"
           className="text-white bg-blue-500 mt-3 hover:bg-blue-800 font-bold py-2 px-4 my-4 rounded-lg w-fit"
         >
           Close Form
-        </a>
+        </Link>
+        <Link
+          href="/preview/"
+          className="text-white bg-blue-500 mt-3 hover:bg-blue-800 font-bold py-2 px-4 my-4 rounded-lg w-fit"
+        >
+          Close Form
+        </Link>
       </div>
     </div>
   );
